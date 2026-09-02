@@ -1,7 +1,18 @@
-import { Box, Layers, Pause, Play, Sparkles } from 'lucide-react';
+import {
+  Box,
+  Maximize2,
+  Pause,
+  Play,
+  RotateCcw,
+  RotateCw,
+  Sparkles,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import { AGENT_CATALOG } from '../../game/config/agentCatalog';
 import { useAgentStore } from '../../game/entities/agents/agentStore';
 import { AgentAnimationState } from '../../game/entities/agents/types';
+import { useCameraStore } from '../../game/scene/cameraStore';
 
 const ANIMATION_OPTIONS: { id: AgentAnimationState; label: string }[] = [
   { id: 'idle', label: 'Idle' },
@@ -13,6 +24,8 @@ const ANIMATION_OPTIONS: { id: AgentAnimationState; label: string }[] = [
   { id: 'error', label: 'Error' },
 ];
 
+const CAMERA_ANGLE_LABELS = ['45° SE', '135° SW', '225° NW', '315° NE'] as const;
+
 export function UIOverlay() {
   const selectedAgentId = useAgentStore((state) => state.selectedAgentId);
   const agentStates = useAgentStore((state) => state.agentStates);
@@ -20,6 +33,14 @@ export function UIOverlay() {
   const selectAgent = useAgentStore((state) => state.selectAgent);
   const setAgentAnimation = useAgentStore((state) => state.setAgentAnimation);
   const togglePause = useAgentStore((state) => state.togglePause);
+
+  // Estado da câmera isométrica
+  const rotationIndex = useCameraStore((state) => state.rotationIndex);
+  const rotateLeft = useCameraStore((state) => state.rotateLeft);
+  const rotateRight = useCameraStore((state) => state.rotateRight);
+  const zoomIn = useCameraStore((state) => state.zoomIn);
+  const zoomOut = useCameraStore((state) => state.zoomOut);
+  const resetCamera = useCameraStore((state) => state.resetCamera);
 
   const selectedAgent = AGENT_CATALOG.find((a) => a.id === selectedAgentId);
   const currentAnimation = selectedAgentId
@@ -32,7 +53,7 @@ export function UIOverlay() {
       className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 md:p-6"
     >
       {/* Barra superior de status e identificação */}
-      <header className="flex items-center justify-between w-full max-w-7xl mx-auto">
+      <header className="flex flex-wrap items-center justify-between gap-2.5 w-full max-w-7xl mx-auto">
         <div className="pointer-events-auto flex items-center gap-3 bg-white/95 backdrop-blur-xs border border-slate-200/80 px-4 py-2.5 rounded-xl shadow-xs">
           <div className="w-8 h-8 rounded-lg bg-sky-500 text-white flex items-center justify-center shadow-xs">
             <Box className="w-4 h-4" />
@@ -45,43 +66,107 @@ export function UIOverlay() {
           </div>
         </div>
 
-        {/* Seletor rápido de agentes no topo */}
-        <div className="pointer-events-auto flex items-center gap-1.5 bg-white/95 backdrop-blur-xs border border-slate-200/80 p-1 rounded-xl shadow-xs">
-          {AGENT_CATALOG.map((agent) => {
-            const isSelected = selectedAgentId === agent.id;
-            return (
-              <button
-                key={agent.id}
-                id={`btn-select-${agent.id}`}
-                onClick={() => selectAgent(agent.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  isSelected
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: agent.appearance.primaryColor }}
-                />
-                <span className="hidden sm:inline">{agent.name}</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          {/* Controles de Câmera Isométrica (Rotação 90° e Zoom) */}
+          <div className="pointer-events-auto flex items-center gap-1 bg-white/95 backdrop-blur-xs border border-slate-200/80 p-1 rounded-xl shadow-xs">
+            <button
+              id="btn-camera-rotate-left"
+              onClick={rotateLeft}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              title="Girar câmera 90° à esquerda"
+              aria-label="Girar câmera 90 graus à esquerda"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
 
-          <button
-            id="btn-toggle-pause"
-            onClick={togglePause}
-            className={`p-1.5 rounded-lg border ml-1 transition-colors ${
-              isPaused
-                ? 'bg-amber-100 text-amber-800 border-amber-300'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-            title={isPaused ? 'Retomar simulação' : 'Pausar simulação'}
-            aria-label={isPaused ? 'Retomar animações' : 'Pausar animações'}
-          >
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-          </button>
+            <span
+              className="text-[11px] font-mono text-slate-600 px-1 select-none hidden sm:inline"
+              title="Ângulo de visão isométrica"
+            >
+              {CAMERA_ANGLE_LABELS[rotationIndex]}
+            </span>
+
+            <button
+              id="btn-camera-rotate-right"
+              onClick={rotateRight}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              title="Girar câmera 90° à direita"
+              aria-label="Girar câmera 90 graus à direita"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="w-px h-3.5 bg-slate-200 mx-0.5" />
+
+            <button
+              id="btn-camera-zoom-out"
+              onClick={zoomOut}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              title="Reduzir zoom"
+              aria-label="Diminuir zoom"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              id="btn-camera-zoom-in"
+              onClick={zoomIn}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              title="Aumentar zoom"
+              aria-label="Aumentar zoom"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              id="btn-camera-reset"
+              onClick={resetCamera}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              title="Restaurar visão original da maquete"
+              aria-label="Restaurar câmera original"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Seletor rápido de agentes no topo */}
+          <div className="pointer-events-auto flex items-center gap-1.5 bg-white/95 backdrop-blur-xs border border-slate-200/80 p-1 rounded-xl shadow-xs">
+            {AGENT_CATALOG.map((agent) => {
+              const isSelected = selectedAgentId === agent.id;
+              return (
+                <button
+                  key={agent.id}
+                  id={`btn-select-${agent.id}`}
+                  onClick={() => selectAgent(agent.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    isSelected
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: agent.appearance.primaryColor }}
+                  />
+                  <span className="hidden sm:inline">{agent.name}</span>
+                </button>
+              );
+            })}
+
+            <button
+              id="btn-toggle-pause"
+              onClick={togglePause}
+              className={`p-1.5 rounded-lg border ml-1 transition-colors ${
+                isPaused
+                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              }`}
+              title={isPaused ? 'Retomar simulação' : 'Pausar simulação'}
+              aria-label={isPaused ? 'Retomar animações' : 'Pausar animações'}
+            >
+              {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
       </header>
 

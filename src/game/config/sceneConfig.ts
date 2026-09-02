@@ -39,11 +39,11 @@ export const SCENE_CONFIG: SceneConfig = {
   backgroundColor: '#f1f5f9', // Slate 100 suave para estética de diorama recortado
   dprLimits: [1, 1.5],
   camera: {
-    position: [15, 15, 15],
-    lookAt: [0, 0, 0],
-    zoom: 36,
-    near: -50,
-    far: 100,
+    position: [20, 20, 20],
+    lookAt: [0, 1.2, 0],
+    zoom: 52,
+    near: -100,
+    far: 200,
   },
   lighting: {
     ambientIntensity: 0.75,

@@ -1,19 +1,13 @@
-import { OrthographicCamera } from '@react-three/drei';
 import { SCENE_CONFIG } from '../config/sceneConfig';
 import { AgentGroup } from '../entities/agents/AgentGroup';
+import { IsometricCamera } from './IsometricCamera';
 import { OfficeEnvironment } from './office/OfficeEnvironment';
 
 export function OfficeScene() {
   return (
     <>
-      {/* Câmera ortográfica isométrica em ângulo 3/4 */}
-      <OrthographicCamera
-        makeDefault
-        position={SCENE_CONFIG.camera.position}
-        zoom={SCENE_CONFIG.camera.zoom}
-        near={SCENE_CONFIG.camera.near}
-        far={SCENE_CONFIG.camera.far}
-      />
+      {/* Câmera ortográfica isométrica 3/4 rigorosa com foco e rotações controladas */}
+      <IsometricCamera />
 
       {/* Iluminação suave e equilibrada sem efeitos dramáticos */}
       <ambientLight

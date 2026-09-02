@@ -4,6 +4,22 @@ Todas as modificações relevantes e marcos técnicos deste projeto são documen
 
 ---
 
+## [0.4.3] - 2026-09-02
+
+### Corrigido
+- **Centralização, enquadramento e perspectiva isométrica da câmera 3D**:
+  - Resolvido o problema em que o diorama do escritório aparecia pequeno, cortado e deslocado para o canto inferior esquerdo com projeção horizontal plana. A câmera ortográfica anterior utilizava posição `[15, 15, 15]` sem invocar `camera.lookAt()`, mantendo sua rotação padrão `Euler(0, 0, 0)` orientada para o eixo `-Z`, o que empurrava o centro do mundo `(0, 0, 0)` 15 unidades para a esquerda e para baixo na tela sem aplicar a rotação angular isométrica de 45°/35.26°.
+  - Criado o componente modular `IsometricCamera.tsx` em conformidade estrita com `ARCHITECTURE.md` e os requisitos de câmera:
+    - Orientação rigorosa via `camera.lookAt([0, 1.2, 0])` e `camera.updateMatrixWorld(true)` garantindo que o centro do escritório permaneça rigorosamente em `(0, 0)` no espaço de tela.
+    - Suporte a rotações exatas em incrementos de 90 graus (45° SE, 135° SW, 225° NW e 315° NE) com transição angular suave via `useFrame` utilizando referências mutáveis (sem disparar `setState` ou alocações de vetores no loop).
+    - Cálculo de zoom responsivo em `calculateResponsiveZoom(width, height)` que adapta o tamanho do diorama para preencher ~75% da viewport com margens elegantes em qualquer resolução (Full HD, ultrawide, notebooks e mobile portrait).
+  - Criado `cameraStore.ts` com Zustand puro e `useSyncExternalStore` para controlar índices de rotação (0..3) e zoom do usuário.
+  - Adicionados controles de câmera na interface (`UIOverlay.tsx`): botões de girar 90° para esquerda/direita, indicador de orientação, zoom in/out e restauração de enquadramento original.
+  - Adicionado suporte a zoom com a roda do mouse (`onWheel`) em `GameCanvas.tsx`.
+  - Adicionada suíte de testes unitários para `cameraUtils.test.ts` e `cameraStore.test.ts` (41 testes passando com 100% de cobertura).
+
+---
+
 ## [0.4.2] - 2026-09-02
 
 ### Corrigido
