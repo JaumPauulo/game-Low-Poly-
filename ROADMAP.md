@@ -6,9 +6,9 @@ Este documento registra o planejamento das etapas de desenvolvimento do **Agent 
 
 ## Estado Atual do Projeto
 
-- **Fase Ativa:** Fase 1 — Setup do Ecossistema 3D e Estado Global
-- **Última Tarefa Concluída:** TASK-001 (Fundação técnica 3D e dependências essenciais)
-- **Próxima Tarefa:** TASK-002 (Estrutura inicial de tipos e store Zustand)
+- **Fase Ativa:** Fase 4 — Entidades e Personagens Procedurais
+- **Última Tarefa Concluída:** TASK-009 (Personagens procedurais chibi/minifig, rig esquelético, catálogo e 7 animações)
+- **Próxima Tarefa:** Fase 2 — Simulação Lógica Pura e Máquina de Estados (State Machine)
 
 ---
 
@@ -56,25 +56,28 @@ Este documento registra o planejamento das etapas de desenvolvimento do **Agent 
 ---
 
 ### Fase 3: Cena 3D, Câmera Ortográfica e Diorama Base
-- [ ] **TASK-006: Canvas 3D e Câmera Ortográfica Isométrica**
-  - Criação do `DioramaCanvas.tsx` com `OrthographicCamera`.
-  - Implementação do controle de câmera em ângulo 3/4 com rotação restrita a passos de 90°.
-  - Delimitação de zoom e pan, garantindo suporte responsivo para desktop e mobile.
-- [ ] **TASK-007: Iluminação suave e pedestal do diorama**
-  - Iluminação difusa (hemisphere light / ambient light) e luz direcional com sombras suaves.
-  - Modelagem procedural da base flutuante recortada com materiais foscos em tons neutros.
+- [x] **TASK-006: Canvas 3D e Câmera Ortográfica Isométrica**
+  - Criação da cena com `OrthographicCamera` em ângulo 3/4 isométrico sem distorção angular de perspectiva.
+- [x] **TASK-007: Iluminação suave e pedestal do diorama**
+  - Iluminação suave e difusa (ambient light + hemisphere light + directional light com sombras suaves PCFSoftShadowMap).
+  - Modelagem procedural da base flutuante recortada com pedestal, piso claro e paredes em corte (cutaway).
 
 ---
 
 ### Fase 4: Entidades e Mobiliário Procedural Low-Poly
-- [ ] **TASK-008: Mobiliário de escritório data-driven**
-  - Construção procedural das estações de trabalho (mesas, monitores, cadeiras).
-  - Construção procedural da mesa de reunião e cadeiras colaborativas.
-  - Construção da área de descanso (sofá, balcão e máquina de café).
-  - Carregamento de mobiliário via configuração data-driven (`officeLayout.ts`).
-- [ ] **TASK-009: Agente Chibi/Minifig procedural**
-  - Construção procedural do modelo chibi utilizando geometrias nativas (cabeça, corpo, membros).
-  - Variações visuais estilizadas (cores de roupa, cabelo/acessório em paleta pastel).
+- [x] **TASK-008: Mobiliário de escritório data-driven**
+  - Construção procedural das 4 estações de trabalho (mesas, monitores, laptops, cadeiras ergonômicas).
+  - Construção procedural da mesa de reunião para 4 pessoas e cadeiras de conferência.
+  - Construção da área de café (balcão, cafeteira express, canecas, mesa bistrô e banquetas).
+  - Construção da área de convivência/lounge (sofá de 3 lugares, almofadas, mesinha de centro, luminária e tapete).
+  - Plantas ornamentais low-poly em vasos geométricos.
+  - Carregamento de mobiliário e zonas 100% data-driven via `officeLayout.ts`.
+- [x] **TASK-009: Agente Chibi/Minifig procedural**
+  - Construção procedural do modelo chibi utilizando geometrias nativas (cabeça grande, tronco simplificado, braços e pernas curtos, mãos esféricas simples, caneca procedural).
+  - Variações visuais estilizadas para os 4 agentes (Gemini, Claude, GPT, Kimi) com cores principais, penteados e acessórios em paleta pastel fosca.
+  - Rig procedural com referências de esqueleto (`AgentRigRefs`) e 7 animações procedurais matemáticas (`idle`, `walking`, `working`, `thinking`, `talking`, `coffee`, `error`).
+  - Marcador de chão (`AgentGroundMarker`) e identificador acima da cabeça (`AgentNameplate`).
+  - Catálogo de agentes data-driven (`agentCatalog.ts`) e store Zustand para teste de animações e seleção.
 
 ---
 

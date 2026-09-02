@@ -39,30 +39,30 @@ export const SCENE_CONFIG: SceneConfig = {
   backgroundColor: '#f1f5f9', // Slate 100 suave para estética de diorama recortado
   dprLimits: [1, 1.5],
   camera: {
-    position: [12, 12, 12],
+    position: [15, 15, 15],
     lookAt: [0, 0, 0],
-    zoom: 48,
+    zoom: 36,
     near: -50,
     far: 100,
   },
   lighting: {
-    ambientIntensity: 0.7,
+    ambientIntensity: 0.75,
     ambientColor: '#ffffff',
-    directionalPosition: [14, 20, 12],
-    directionalIntensity: 1.5,
-    directionalColor: '#fffbeb', // Tom sutilmente acolhedor
+    directionalPosition: [14, 22, 12],
+    directionalIntensity: 1.4,
+    directionalColor: '#fffdf5', // Luz solar suave e acolhedora
     hemisphereSkyColor: '#ffffff',
     hemisphereGroundColor: '#cbd5e1',
     hemisphereIntensity: 0.45,
     shadowMapSize: 1024,
   },
   testScene: {
-    planeSize: [12, 12],
-    planeColor: '#e2e8f0', // Slate 200
+    planeSize: [14.4, 10.8],
+    planeColor: '#e2e8f0',
     planeRoughness: 0.85,
     cubeSize: [1.8, 1.8, 1.8],
     cubePosition: [0, 0.9, 0],
-    cubeColor: '#38bdf8', // Sky 400 low poly
+    cubeColor: '#38bdf8',
     cubeRoughness: 0.6,
   },
 };

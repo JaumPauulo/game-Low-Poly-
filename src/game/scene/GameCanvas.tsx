@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SCENE_CONFIG } from '../config/sceneConfig';
-import { TestScene } from './TestScene';
+import { OfficeScene } from './OfficeScene';
 
 export function GameCanvas() {
   return (
@@ -24,7 +24,7 @@ export function GameCanvas() {
       >
         {/* Background sólido suave para a estética de diorama */}
         <color attach="background" args={[SCENE_CONFIG.backgroundColor]} />
-        <TestScene />
+        <OfficeScene />
       </Canvas>
     </div>
   );

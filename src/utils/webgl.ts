@@ -13,7 +13,7 @@ export function isWebGLAvailable(): boolean {
       canvas.getContext('webgl2') ||
       canvas.getContext('webgl') ||
       canvas.getContext('experimental-webgl');
-    return Boolean(gl && gl instanceof WebGLRenderingContext);
+    return Boolean(gl && typeof (gl as WebGLRenderingContext).getParameter === 'function');
   } catch {
     return false;
   }

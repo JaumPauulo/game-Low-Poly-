@@ -4,6 +4,76 @@ Todas as modificações relevantes e marcos técnicos deste projeto são documen
 
 ---
 
+## [0.4.1] - 2026-09-02
+
+### Corrigido
+- **Resolução de hooks React em `UIOverlay` e `agentStore`**:
+  - Resolvido o erro `Invalid hook call: Cannot read properties of null (reading 'useCallback')` causado pela duplicação de instâncias internas de React entre Zustand (`node_modules/zustand/esm/react.mjs`) e React 19 no bundler Vite.
+  - Adicionada configuração explícita de `resolve.dedupe: ['react', 'react-dom', 'zustand', 'three']` no `vite.config.ts` para garantir instância única do React em todo o ecossistema e subdependências (R3F, Drei, Zustand).
+  - Refatorado `src/game/entities/agents/agentStore.ts` para utilizar `createStore` de `zustand/vanilla` associado a `useSyncExternalStore` nativo diretamente do pacote `'react'`, eliminando qualquer camada intermediária propensa a descompasso de dispatcher.
+  - Otimizado `AgentAvatar.tsx` para passar a tupla `position={config.initialPosition}` diretamente sem alocar instâncias de `Vector3` no JSX.
+  - Adicionado teste de unidade em `agentStore.test.ts` (27 testes passando no total).
+
+---
+
+## [0.4.0] - 2026-09-02
+
+### Corrigido
+- **Detecção de aceleração WebGL (`src/utils/webgl.ts`)**: Corrigida a validação que exigia estritamente `gl instanceof WebGLRenderingContext`. Em ambientes e navegadores modernos que retornam `WebGL2RenderingContext` (ou instâncias em iframes), a verificação agora valida adequadamente a existência do contexto e da função `getParameter`, eliminando a exibição incorreta da tela de fallback de WebGL ausente relatada no teste de deploy.
+
+### Adicionado
+- **Personagens procedurais chibi/minifig (TASK-009)**:
+  - Criação dos 4 agentes autônomos configuráveis e visualmente distintos:
+    - **Gemini**: Product & Coordination (`#6480D8`), cabelo repartido, crachá funcional, posicionado na mesa de conferência.
+    - **Claude**: Research & Documentation (`#D48759`), cabelo castanho cacheado, óculos finos, posicionado na estação de pesquisa.
+    - **GPT**: Software Engineering (`#4E9B77`), cabelo escuro curto, headset de comunicação, posicionado na estação de desenvolvimento.
+    - **Kimi**: Data Analysis (`#7D6AC8`), corte liso contemporâneo, posicionado na área de café com caneca.
+  - Modelagem procedural 100% em primitivas Three.js (sem assets externos, texturas fotográficas ou rostos realistas):
+    - Cabeça grande estilizada (raio ~0.24) com olhos mínimos geométricos e variações procedurais de corte de cabelo e acessórios.
+    - Tronco simplificado minifig em proporções chibi (0.38 x 0.36 x 0.24), gola/gravata e calças escuras em materiais foscos.
+    - Braços curtos com mãos esféricas simples e caneca de café procedural anexada.
+  - **Arquitetura modular de agentes**:
+    - `AgentRig`: Anatomia procedural com pontos de articulação e referências de esqueleto (`AgentRigRefs`).
+    - `AgentAvatar`: Orquestrador visual com cinemática contínua, zero alocações por frame no `useFrame` e suporte a `prefers-reduced-motion`.
+    - `AgentNameplate`: Identificador textual flutuante nítido com nome e função.
+    - `AgentGroundMarker`: Marcador circular no piso refletindo estados de seleção e hover.
+    - `AGENT_CATALOG`: Catálogo data-driven extensível para adicionar novos agentes sem duplicar componentes.
+    - `useAgentStore`: Store Zustand com seleção ativa, pausa da simulação e chaveamento de animações.
+  - **7 Animações procedurais matemáticas puras**:
+    - `idle`: Respiração sutil no eixo Y e leve oscilação harmônica.
+    - `walking`: Alternância rítmica de pernas e braços em oposição de fase.
+    - `working`: Digitação rápida com mãos alternadas e cabeça orientada para o monitor.
+    - `thinking`: Mão direita próxima ao queixo com inclinação curiosa da cabeça.
+    - `talking`: Gestos articulados de diálogo e acenos afirmativos.
+    - `coffee`: Caneca erguida ciclicamente até a boca com degustação.
+    - `error`: Sobressalto rápido (shake harmônico) com braços levantados.
+  - Painel de teste e seleção integrado ao `UIOverlay`.
+  - Suíte de testes unitários com Vitest em `animations.test.ts` e `agentCatalog.test.ts` (21 testes passando no total).
+
+---
+
+## [0.3.0] - 2026-09-02
+
+### Adicionado
+- **Cenário procedural do escritório e mobiliário data-driven**
+  - Definição da geometria em grid de 12x9 células com 1.2 unidades de tamanho (dimensões totais de 14.4 x 10.8 unidades no mundo 3D).
+  - Configuração data-driven estritamente tipada em `src/game/config/officeLayout.ts` com zonas lógicas, posições de mobiliário, rotações e bounding boxes para navegação.
+  - Componentes procedurais reutilizáveis com primitivas Three.js puras (sem modelos GLB, sem texturas externas):
+    - `DioramaBase`: Base flutuante com altura ~0.45, pedestal chanfrado e piso claro com divisões funcionais discretas.
+    - `CutawayWalls`: Paredes Norte e Oeste (altura ~3.5, espessura ~0.25) com acabamento fosco, rodapés, whiteboard com moldura de alumínio e marcadores coloridos, e painéis acústicos estilizados.
+    - `LowPolyDesk`: Mesas com acabamento carvalho escandinavo, estrutura metálica em grafite, gaveteiro embutido e divisória acústica de feltro colorido.
+    - `LowPolyChair`: Cadeiras de escritório ergonômicas com assentos estofados pastel, encosto anatômico e base em estrela com rodinhas.
+    - `LowPolyComputer`: Computadores desktop widescreen com teclado e mousepad, além de laptops compactos com telas iluminadas em azul pastel.
+    - `MeetingTable`: Mesa de conferência espaçosa (3.4 x 1.6) com caixa de tomadas, laptop de apresentação e 4 cadeiras de reunião orientadas simetricamente.
+    - `CoffeeStation`: Balcão de café com tampo em mármore claro, cafeteira express low-poly com grupos de extração e manoplas, canecas coloridas e mesinha bistrô com banquetas.
+    - `LoungeArea`: Área de convivência com tapete delimitador, sofá moderno de 3 lugares com almofadas de destaque, mesinha de centro baixa com revista corporativa e luminária alta de chão.
+    - `LowPolyPlant`: Vasos geométricos cerâmicos com terra e folhagem facetada estilizada.
+    - `OfficeEnvironment`: Orquestrador data-driven integrando todas as áreas e garantindo corredores centrais amplos e livres.
+    - `OfficeScene`: Integração da câmera ortográfica isométrica e iluminação suave com sombras suaves (`PCFSoftShadowMap`).
+  - Testes unitários com Vitest em `src/game/config/officeLayout.test.ts` e `src/game/scene/office/officeLayoutMetrics.test.ts` (12 testes passando).
+
+---
+
 ## [0.2.0] - 2026-09-02
 
 ### Adicionado
