@@ -29,7 +29,7 @@ const initialStates: Record<AgentId, AgentStateRecord> = AGENT_CATALOG.reduce(
 );
 
 export const rawAgentStore = createStore<AgentStoreState>((set) => ({
-  selectedAgentId: 'gemini', // Seleção inicial padrão para teste visual
+  selectedAgentId: null,
   agentStates: initialStates,
   isPaused: false,
 

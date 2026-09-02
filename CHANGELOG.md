@@ -4,6 +4,17 @@ Todas as modificações relevantes e marcos técnicos deste projeto são documen
 
 ---
 
+## [0.4.2] - 2026-09-02
+
+### Corrigido
+- **Escala de `AgentNameplate` e normalização da visualização 3D**:
+  - Resolvido o problema em que a tela exibia apenas formas gigantes azul-escuras e letras imensas. O componente `<Html>` do `@react-three/drei` com `distanceFactor={18}` em conjunto com uma `OrthographicCamera` (`camera.zoom: 36`) multiplicava o tamanho dos elementos CSS por `36 * 18 = 648x`, fazendo com que a placa de identificação estilizada em `bg-slate-900` se expandisse por dezenas de milhares de pixels cobrindo todo o diorama.
+  - Removido `distanceFactor` para utilizar escala 1:1 estritamente em pixels no espaço de tela, mantendo tipografia e marcadores perfeitamente nítidos e proporcionais acima da cabeça dos agentes.
+  - Configurado `zIndexRange={[5, 0]}` no `<Html>` para garantir que placas flutuantes nunca se sobreponham aos painéis da interface (`z-10`).
+  - Inicialização de `selectedAgentId: null` na store para apresentar o diorama limpo e focado no cenário e personagens na carga inicial, destacando placas apenas sob seleção ou hover interativo.
+
+---
+
 ## [0.4.1] - 2026-09-02
 
 ### Corrigido

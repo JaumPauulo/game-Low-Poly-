@@ -4,7 +4,7 @@ import { rawAgentStore, useAgentStore } from './agentStore';
 describe('useAgentStore and rawAgentStore', () => {
   it('inicializa com os estados corretos para todos os agentes', () => {
     const state = rawAgentStore.getState();
-    expect(state.selectedAgentId).toBe('gemini');
+    expect(state.selectedAgentId).toBeNull();
     expect(state.isPaused).toBe(false);
     expect(state.agentStates.gemini?.animation).toBe('talking');
     expect(state.agentStates.claude?.animation).toBe('thinking');

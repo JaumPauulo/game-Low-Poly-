@@ -24,15 +24,15 @@ export function AgentNameplate({
 
   return (
     <Html
-      position={[0, 1.48, 0]}
+      position={[0, 1.25, 0]}
       center
-      distanceFactor={18}
+      zIndexRange={[5, 0]}
       style={{ pointerEvents: 'none', userSelect: 'none' }}
     >
-      <div className="flex flex-col items-center animate-fade-in">
+      <div className="flex flex-col items-center">
         {/* Caixa da placa */}
         <div
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-md backdrop-blur-md transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-md transition-all whitespace-nowrap ${
             isSelected
               ? 'bg-slate-900 text-white ring-2 ring-offset-1 ring-slate-800'
               : 'bg-white/95 text-slate-800 border border-slate-200'
