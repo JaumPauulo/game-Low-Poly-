@@ -10,6 +10,7 @@ export interface CameraStoreState {
   rotationIndex: number;
   zoomMultiplier: number;
   target: [number, number, number];
+  followingAgentId: string | null;
 
   // Ações puras
   rotateLeft: () => void;
@@ -17,13 +18,17 @@ export interface CameraStoreState {
   zoomIn: () => void;
   zoomOut: () => void;
   setZoomMultiplier: (multiplier: number) => void;
+  followAgent: (agentId: string | null) => void;
+  stopFollowing: () => void;
   resetCamera: () => void;
+  setTarget: (target: [number, number, number]) => void;
 }
 
 export const rawCameraStore = createStore<CameraStoreState>((set) => ({
   rotationIndex: 0,
   zoomMultiplier: 1.0,
   target: [...ISOMETRIC_CAMERA_CONFIG.defaultTarget],
+  followingAgentId: null,
 
   rotateLeft: () =>
     set((state) => ({
@@ -50,11 +55,27 @@ export const rawCameraStore = createStore<CameraStoreState>((set) => ({
       zoomMultiplier: clampZoomMultiplier(multiplier),
     })),
 
+  followAgent: (agentId: string | null) =>
+    set(() => ({
+      followingAgentId: agentId,
+    })),
+
+  stopFollowing: () =>
+    set(() => ({
+      followingAgentId: null,
+    })),
+
   resetCamera: () =>
     set(() => ({
       rotationIndex: 0,
       zoomMultiplier: 1.0,
       target: [...ISOMETRIC_CAMERA_CONFIG.defaultTarget],
+      followingAgentId: null,
+    })),
+
+  setTarget: (target: [number, number, number]) =>
+    set(() => ({
+      target: [...target],
     })),
 }));
 

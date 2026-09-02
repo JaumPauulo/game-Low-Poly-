@@ -67,6 +67,7 @@ export function createInitialSimulationState(options: {
       focus: clamp(agent.focus, 0, 1),
       stateElapsedTime: 0,
       completedTaskCount: agent.completedTaskCount ?? 0,
+      lastDecisionOrigin: agent.lastDecisionOrigin ?? 'local',
     };
   }
 

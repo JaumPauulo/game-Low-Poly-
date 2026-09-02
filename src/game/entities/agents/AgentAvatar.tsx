@@ -13,6 +13,7 @@ interface AgentAvatarProps {
   animationState?: AgentAnimationState;
   isSelected?: boolean;
   isPaused?: boolean;
+  hasError?: boolean;
   onSelect?: (id: string) => void;
 }
 
@@ -21,6 +22,7 @@ export function AgentAvatar({
   animationState,
   isSelected = false,
   isPaused = false,
+  hasError = false,
   onSelect,
 }: AgentAvatarProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -90,6 +92,10 @@ export function AgentAvatar({
     }
   };
 
+  const handlePointerDown = (e: { stopPropagation: () => void }) => {
+    e.stopPropagation();
+  };
+
   return (
     <group
       ref={rootGroupRef}
@@ -97,6 +103,7 @@ export function AgentAvatar({
       position={config.initialPosition}
       rotation={[0, config.initialRotationY, 0]}
       onClick={handleClick}
+      onPointerDown={handlePointerDown}
       onPointerOver={(e) => {
         e.stopPropagation();
         setIsHovered(true);
@@ -119,8 +126,10 @@ export function AgentAvatar({
         isHovered={isHovered}
       />
 
-      {/* Rig procedural do personagem chibi/minifig */}
-      <AgentRig appearance={config.appearance} rigRefs={rigRefs} />
+      {/* Rig procedural do personagem chibi/minifig com micro escala suave em hover */}
+      <group scale={isHovered && !isSelected ? [1.035, 1.035, 1.035] : [1, 1, 1]}>
+        <AgentRig appearance={config.appearance} rigRefs={rigRefs} />
+      </group>
 
       {/* Placa com nome e função acima da cabeça */}
       <AgentNameplate
@@ -129,6 +138,7 @@ export function AgentAvatar({
         primaryColor={config.appearance.primaryColor}
         isSelected={isSelected}
         isHovered={isHovered}
+        hasError={hasError}
       />
     </group>
   );

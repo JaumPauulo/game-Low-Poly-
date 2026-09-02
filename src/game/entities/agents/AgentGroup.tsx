@@ -1,18 +1,21 @@
 import { useFrame } from '@react-three/fiber';
 import { AGENT_CATALOG } from '../../config/agentCatalog';
+import { simulationBridge } from '../../systems/simulationBridge';
+import { useSimulationStore } from '../../simulation/simulationStore';
 import { AgentAvatar } from './AgentAvatar';
-import { rawAgentMovementStore } from './agentMovementStore';
 import { useAgentStore } from './agentStore';
 
 export function AgentGroup() {
   const selectedAgentId = useAgentStore((state) => state.selectedAgentId);
   const agentStates = useAgentStore((state) => state.agentStates);
-  const isPaused = useAgentStore((state) => state.isPaused);
   const selectAgent = useAgentStore((state) => state.selectAgent);
 
-  // Orquestrador de tick de simulação da cinemática e ocupação de todos os agentes
+  const isPaused = useSimulationStore((state) => state.state.isPaused);
+  const simAgents = useSimulationStore((state) => state.state.agents);
+
+  // Orquestrador de integração: fixed timestep da simulação lógica + cinemática 3D
   useFrame((_, delta) => {
-    rawAgentMovementStore.getState().tick(delta, isPaused);
+    simulationBridge.update(delta);
   });
 
   return (
@@ -21,6 +24,8 @@ export function AgentGroup() {
         const stateRecord = agentStates[config.id];
         const animation = stateRecord ? stateRecord.animation : config.initialAnimation;
         const isSelected = selectedAgentId === config.id;
+        const simAgent = simAgents[config.id];
+        const hasError = simAgent?.state === 'error';
 
         return (
           <AgentAvatar
@@ -29,6 +34,7 @@ export function AgentGroup() {
             animationState={animation}
             isSelected={isSelected}
             isPaused={isPaused}
+            hasError={hasError}
             onSelect={selectAgent}
           />
         );
@@ -36,3 +42,4 @@ export function AgentGroup() {
     </group>
   );
 }
+

@@ -4,6 +4,50 @@ Todas as modificações relevantes e marcos técnicos deste projeto são documen
 
 ---
 
+## [0.8.0] - 2026-09-02
+
+### Adicionado
+- **Integração do Motor de Simulação à Navegação e Representação 3D (TASK-010 / TASK-011 / TASK-012)**:
+  - **Zonas e Pontos de Interação Configuráveis (`src/game/config/officeZones.ts`)**:
+    - Definição das 6 zonas exigidas pela especificação: `workstations`, `coffee`, `meeting`, `lounge`, `spawn` e `walkable`.
+    - Cada zona possui pontos de interação com coordenadas discretas de grid e contínuas no mundo 3D rigorosamente alinhadas com as células transitáveis do grid de navegação.
+    - Prevenção de sobreposição: função pura `getAvailableInteractionPoint` que respeita ocupação de outros agentes e mesas atribuídas aos respectivos avatares.
+    - Testes unitários com Vitest em `officeZones.test.ts`.
+  - **Cenário Inicial e Fila de Tarefas (`src/game/simulation/initialScenario.ts`)**:
+    - 6 tarefas cobrindo os tipos solicitados: `coding` (2x: arquitetura do sistema e sincronização de estado), `research` (pesquisa de heurísticas A*), `analysis` (otimização de render e draw calls), `planning` (planejamento da iteração) e `documentation` (redação do manual do simulador).
+    - Configuração de dependências encadeadas entre tarefas respeitando a lógica de desbloqueio.
+    - Inicialização dos 4 agentes com habilidades e estados prontos para execução autônoma.
+    - Testes unitários com Vitest em `initialScenario.test.ts`.
+  - **Store e Controlador de Ciclo de Vida (`src/game/simulation/simulationStore.ts`)**:
+    - Gerenciamento reativo do estado da simulação com Zustand vanilla sem dependência de Three.js.
+    - Controles de execução: Play, Pause, velocidades 1x, 2x, 4x e Reset completo do cenário determinístico.
+    - Fila de eventos históricos de telemetria com limite seguro de memória (50 itens).
+  - **Ponte de Integração da Simulação (`src/game/systems/simulationBridge.ts`)**:
+    - Ponte desacoplada entre a lógica pura e a renderização Three.js.
+    - Mapeamento estrito dos 9 estados para animações:
+      - `idle` -> `idle`
+      - `planning` -> `thinking`
+      - `walking` -> `walking` (trajeto pelo A*)
+      - `working` -> `working` (estação de trabalho)
+      - `thinking` -> `thinking`
+      - `collaborating` -> `talking` (sala de reunião)
+      - `coffee` -> `coffee` (área de café)
+      - `talking` -> `talking`
+      - `error` -> `idle` (com indicador visual discreto)
+    - Interpretação de comandos emitidos pela simulação (`MOVE_TO_ZONE`) acionando o `AgentMovementStore` para navegação cinemática.
+    - Atualização da zona do agente e transição de estado da simulação estritamente após a chegada física ao destino.
+    - Testes unitários com Vitest em `simulationBridge.test.ts`.
+  - **Atualização Visual de Avatares e Nameplates (`AgentAvatar.tsx`, `AgentNameplate.tsx`)**:
+    - Adicionado suporte a indicador de erro visual `hasError` em avatares e placas de identificação sobre a cabeça.
+    - Otimização do loop `useFrame` em `AgentGroup.tsx`: o `simulationBridge.update(delta)` orquestra o avanço lógico e a cinemática sem acionar `setState` por frame.
+  - **Painéis de Controle, Feed de Eventos e Acompanhamento de Tarefas (`src/ui/panels/`)**:
+    - `SimulationControls.tsx`: Barra de reprodução com botões de pausa, play, velocidades (1x, 2x, 4x), reset e cronômetro de tempo de simulação.
+    - `EventFeedPanel.tsx`: Feed de eventos em tempo real com ícones para cada categoria de evento (atribuição, início, conclusão, café, colaboração e alertas).
+    - `TaskBoardPanel.tsx`: Quadro de acompanhamento de tarefas exibindo progresso, status, dependências e agente alocado.
+    - Integração de botões de alternância e gavetas no `UIOverlay.tsx`.
+
+---
+
 ## [0.7.0] - 2026-09-02
 
 ### Adicionado

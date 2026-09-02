@@ -65,19 +65,11 @@ export function DioramaBase() {
         material={materials.floor}
         onClick={(e) => {
           e.stopPropagation();
-          const selectedId = rawAgentStore.getState().selectedAgentId;
-          if (selectedId) {
-            rawAgentMovementStore.getState().commandAgentMove(selectedId, {
-              x: e.point.x,
-              z: e.point.z,
-            });
-          } else {
-            rawAgentStore.getState().selectAgent(null);
-          }
+          rawAgentStore.getState().selectAgent(null);
         }}
         onPointerOver={() => {
-          if (rawAgentStore.getState().selectedAgentId && typeof document !== 'undefined') {
-            document.body.style.cursor = 'crosshair';
+          if (typeof document !== 'undefined') {
+            document.body.style.cursor = 'default';
           }
         }}
         onPointerOut={() => {

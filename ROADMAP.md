@@ -6,9 +6,9 @@ Este documento registra o planejamento das etapas de desenvolvimento do **Agent 
 
 ## Estado Atual do Projeto
 
-- **Fase Ativa:** Fase 2 — Simulação Lógica Pura e Máquina de Estados (State Machine)
-- **Última Tarefa Concluída:** TASK-005 (Motor lógico e determinístico da simulação, PRNG, fórmulas de produtividade e FSM pura)
-- **Próxima Tarefa:** Integração da simulação aos personagens visuais e UI de telemetria
+- **Fase Ativa:** Fase 6 — Interface do Usuário, Telemetria e Monitoramento de Tarefas
+- **Última Tarefa Concluída:** TASK-010 / TASK-011 / TASK-012 (Integração do motor de simulação ao sistema de navegação e representação 3D, mapeamento de animações, telemetria de eventos e painel de tarefas)
+- **Próxima Tarefa:** Polimento da interface, acessibilidade e controles interativos avançados
 
 ---
 
@@ -30,10 +30,10 @@ Este documento registra o planejamento das etapas de desenvolvimento do **Agent 
   - Configuração do pipeline gráfico: sRGB (`SRGBColorSpace`), sombras suaves (`PCFSoftShadowMap`), antialias, limite de DPR `[1, 1.5]` e fundo sólido.
   - Cena de teste com plano receptor de sombra, iluminação suave e cubo low poly procedural girando via ref (sem setState em useFrame).
   - Tratamento de erro com fallback para falha de WebGL e Error Boundary para o ciclo de renderização.
-- [ ] **TASK-002: Estrutura inicial de diretórios e store Zustand**
-  - Criação dos diretórios modulares sob `src/game/`, `src/ui/`, `src/store/`.
-  - Definição dos tipos centrais do simulador em `src/game/types.ts`.
-  - Criação da store inicial `useGameStore.ts`.
+- [x] **TASK-002: Estrutura modular de diretórios e stores Zustand**
+  - Criação dos diretórios modulares sob `src/game/`, `src/ui/`, `src/hooks/`, `src/utils/`.
+  - Definição dos tipos centrais do simulador.
+  - Stores dedicadas: `cameraStore`, `agentStore`, `agentMovementStore`, `simulationStore`.
 
 ---
 
@@ -101,19 +101,33 @@ Este documento registra o planejamento das etapas de desenvolvimento do **Agent 
 ---
 
 ### Fase 5: Conexão Simulação-Render e Animação Procedural
-- [ ] **TASK-010: Sincronizador de simulação e interpolação de movimento**
-  - Conexão do loop de tick da simulação com a renderização via `useSimulationSync.ts`.
-  - Interpolação suave de posição (`lerp`) e rotação nos meshes dos agentes sem mutação de estado React por frame.
-- [ ] **TASK-011: Animações procedurais e feedback de estado**
-  - Bobbing suave de caminhada e postura sentada durante o trabalho.
-  - Indicadores visuais sutis de status do agente (balões de pensamento, ícones de foco/fadiga).
+- [x] **TASK-010: Integração da Simulação ao Sistema de Navegação e Representação 3D**
+  - Criação de `officeZones.ts` com 6 zonas configuráveis (`workstations`, `coffee`, `meeting`, `lounge`, `spawn`, `walkable`) com pontos de interação alinhados a células transitáveis no grid A*.
+  - Criação de `initialScenario.ts` contendo 6 tarefas com os tipos obrigatórios (`coding` x2, `research`, `analysis`, `planning`, `documentation`) e dependências encadeadas.
+  - Implementação de `simulationStore.ts` com Zustand vanilla gerenciando o estado lógico determinístico, tempo de simulação, feed de eventos com limite de memória e controles.
+  - Implementação de `SimulationBridge.ts` como ponte desacoplada: consome comandos lógicos (`MOVE_TO_ZONE`), orquestra o `AgentMovementStore` para navegação com A* e atualiza o estado e a zona no modelo ao chegar ao destino sem permitir que a cena Three.js altere regras de produtividade.
+  - Prevenção rigorosa de sobreposição em pontos de interação através de reserva de mesas e pontos de interação ocupados.
+- [x] **TASK-011: Mapeamento de Estados Lógicos para Animações Procedurais**
+  - Mapeamento determinístico dos 9 estados da simulação:
+    - `idle` -> `idle`
+    - `planning` -> `thinking`
+    - `walking` -> `walking` (trajeto pelo A*)
+    - `working` -> `working` (estação de trabalho)
+    - `thinking` -> `thinking`
+    - `collaborating` -> `talking` (sala de reunião)
+    - `coffee` -> `coffee` (área de café)
+    - `talking` -> `talking`
+    - `error` -> `idle` com indicador visual sutil (emblema de alerta pulsante no nameplate e avatar)
+  - Integração no `AgentGroup.tsx` atualizando a simulação e os meshes diretamente via refs no `useFrame` sem chamadas de setState por frame.
 
 ---
 
-### Fase 6: Interface do Usuário e Controles
-- [ ] **TASK-012: Painel de controle da simulação**
-  - Controles de reprodução (Play, Pause, Velocidades 1x, 2x, 4x).
-  - Indicador de tempo simulado e métricas globais de produtividade do escritório.
+### Fase 6: Interface do Usuário, Telemetria e Controles
+- [x] **TASK-012: Painéis de Controle, Feed de Eventos e Acompanhamento de Tarefas**
+  - Controles de reprodução (`SimulationControls.tsx`): Play/Pause, velocidades 1x, 2x, 4x e Reset do Cenário.
+  - Feed de telemetria em tempo real (`EventFeedPanel.tsx`) exibindo histórico recente de eventos da simulação (início de tarefas, conclusões, pausas para café, colaborações e erros).
+  - Acompanhamento do quadro de tarefas (`TaskBoardPanel.tsx`) com barra de progresso, tags de status coloridas, indicação de dependências e agente alocado.
+  - Integração harmoniosa no `UIOverlay.tsx` com gavetas retráteis acessíveis para desktop e dispositivos móveis.
 - [ ] **TASK-013: Painel de inspeção de agentes e backlog de tarefas**
   - Seleção de agentes por clique ou lista para inspeção detalhada de atributos vitais.
   - Visualização e atribuição do backlog de tarefas da equipe.

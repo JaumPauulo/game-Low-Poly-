@@ -21,6 +21,8 @@ export type AgentSimulationState =
   | 'talking'
   | 'error';
 
+export type AgentState = AgentSimulationState;
+
 export type TaskStatus =
   | 'backlog'
   | 'assigned'
@@ -43,6 +45,7 @@ export interface AgentSimulationModel {
   stateElapsedTime: number;
   completedTaskCount: number;
   errorMessage?: string | null;
+  lastDecisionOrigin?: 'local' | 'ai';
 }
 
 export interface TaskModel {
@@ -158,6 +161,7 @@ export interface SimulationEvent {
   type: SimulationEventType;
   simulationTime: number;
   agentId?: string;
+  targetAgentId?: string;
   taskId?: string;
   details?: Record<string, unknown>;
 }

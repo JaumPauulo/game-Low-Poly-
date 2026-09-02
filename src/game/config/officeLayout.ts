@@ -252,3 +252,6 @@ export const OFFICE_LAYOUT_CONFIG: OfficeLayoutConfig = {
     { id: 'lounge-table-block', minX: 3.0, maxX: 4.6, minZ: 2.0, maxZ: 3.0, height: 0.45 },
   ],
 };
+
+export const STATIC_OBSTACLES = OFFICE_LAYOUT_CONFIG.staticObstacles;
+

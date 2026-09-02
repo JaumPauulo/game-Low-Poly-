@@ -49,16 +49,22 @@ describe('cameraStore', () => {
     expect(rawCameraStore.getState().zoomMultiplier).toBe(0.6);
   });
 
-  it('restaura configurações originais via resetCamera', () => {
-    const { rotateRight, setZoomMultiplier, resetCamera } = rawCameraStore.getState();
+  it('controla acompanhamento de agente via followAgent e stopFollowing', () => {
+    const { followAgent, stopFollowing, resetCamera } = rawCameraStore.getState();
 
-    rotateRight();
-    setZoomMultiplier(1.5);
-    expect(rawCameraStore.getState().rotationIndex).toBe(1);
-    expect(rawCameraStore.getState().zoomMultiplier).toBe(1.5);
+    expect(rawCameraStore.getState().followingAgentId).toBeNull();
+
+    followAgent('gpt');
+    expect(rawCameraStore.getState().followingAgentId).toBe('gpt');
+
+    stopFollowing();
+    expect(rawCameraStore.getState().followingAgentId).toBeNull();
+
+    followAgent('claude');
+    expect(rawCameraStore.getState().followingAgentId).toBe('claude');
 
     resetCamera();
-    expect(rawCameraStore.getState().rotationIndex).toBe(0);
-    expect(rawCameraStore.getState().zoomMultiplier).toBe(1.0);
+    expect(rawCameraStore.getState().followingAgentId).toBeNull();
+    expect(rawCameraStore.getState().target).toEqual([0, 1.2, 0]);
   });
 });
