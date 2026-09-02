@@ -1,6 +1,8 @@
 import { SCENE_CONFIG } from '../config/sceneConfig';
 import { AgentGroup } from '../entities/agents/AgentGroup';
 import { IsometricCamera } from './IsometricCamera';
+import { DestinationMarker } from './navigation/DestinationMarker';
+import { NavigationDebugOverlay } from './navigation/NavigationDebugOverlay';
 import { OfficeEnvironment } from './office/OfficeEnvironment';
 
 export function OfficeScene() {
@@ -40,8 +42,14 @@ export function OfficeScene() {
       {/* Cenário procedural do escritório */}
       <OfficeEnvironment />
 
+      {/* Marcador de destino dinâmico do agente selecionado */}
+      <DestinationMarker />
+
       {/* Agentes autônomos procedurais chibi/minifig */}
       <AgentGroup />
+
+      {/* Overlay de depuração do grid de navegação e A* (desativado por padrão) */}
+      <NavigationDebugOverlay />
     </>
   );
 }

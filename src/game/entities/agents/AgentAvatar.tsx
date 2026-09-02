@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { updateAgentRigAnimation } from './animations';
 import { AgentGroundMarker } from './AgentGroundMarker';
+import { rawAgentMovementStore } from './agentMovementStore';
 import { AgentNameplate } from './AgentNameplate';
 import { AgentRig } from './AgentRig';
 import { AgentAnimationState, AgentConfig, AgentRigRefs } from './types';
@@ -24,6 +25,7 @@ export function AgentAvatar({
 }: AgentAvatarProps) {
   const [isHovered, setIsHovered] = useState(false);
   const activeAnimation = animationState ?? config.initialAnimation;
+  const rootGroupRef = useRef<THREE.Group>(null);
 
   // Refs de peças do esqueleto para cinemática procedural sem alocação
   const rigRefs = useRef<AgentRigRefs>({
@@ -58,6 +60,14 @@ export function AgentAvatar({
   const accumulatedTimeRef = useRef(0);
 
   useFrame((_, delta) => {
+    // Sincroniza posição contínua e orientação do avatar sem renderizar novamente a árvore React
+    const movement = rawAgentMovementStore.getState().movements[config.id];
+    if (movement && rootGroupRef.current) {
+      rootGroupRef.current.position.x = movement.currentWorldPos.x;
+      rootGroupRef.current.position.z = movement.currentWorldPos.z;
+      rootGroupRef.current.rotation.y = movement.rotationY;
+    }
+
     if (isPaused) {
       return;
     }
@@ -82,6 +92,7 @@ export function AgentAvatar({
 
   return (
     <group
+      ref={rootGroupRef}
       name={`agent-${config.id}`}
       position={config.initialPosition}
       rotation={[0, config.initialRotationY, 0]}

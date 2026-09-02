@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SCENE_CONFIG } from '../config/sceneConfig';
+import { rawAgentStore } from '../entities/agents/agentStore';
 import { rawCameraStore } from './cameraStore';
 import { OfficeScene } from './OfficeScene';
 
@@ -21,6 +22,9 @@ export function GameCanvas() {
       <Canvas
         id="diorama-three-canvas"
         shadows={{ type: THREE.PCFSoftShadowMap }}
+        onPointerMissed={() => {
+          rawAgentStore.getState().selectAgent(null);
+        }}
         gl={{
           antialias: true,
           alpha: false,

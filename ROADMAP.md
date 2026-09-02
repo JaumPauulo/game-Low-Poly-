@@ -6,9 +6,9 @@ Este documento registra o planejamento das etapas de desenvolvimento do **Agent 
 
 ## Estado Atual do Projeto
 
-- **Fase Ativa:** Fase 4 — Entidades e Personagens Procedurais
-- **Última Tarefa Concluída:** TASK-009 (Personagens procedurais chibi/minifig, rig esquelético, catálogo e 7 animações)
-- **Próxima Tarefa:** Fase 2 — Simulação Lógica Pura e Máquina de Estados (State Machine)
+- **Fase Ativa:** Fase 2 — Simulação Lógica Pura e Máquina de Estados (State Machine)
+- **Última Tarefa Concluída:** TASK-005 (Motor lógico e determinístico da simulação, PRNG, fórmulas de produtividade e FSM pura)
+- **Próxima Tarefa:** Integração da simulação aos personagens visuais e UI de telemetria
 
 ---
 
@@ -38,20 +38,39 @@ Este documento registra o planejamento das etapas de desenvolvimento do **Agent 
 ---
 
 ### Fase 2: Motor Matemático e Simulação Pura (TypeScript Puro)
-- [ ] **TASK-003: Fundamentos determinísticos e PRNG**
-  - Implementação do gerador determinístico pseudoaleatório baseado em seed (`prng.ts`).
-  - Implementação do gerenciador de fixed timestep (`timeStep.ts`).
-  - Testes unitários com Vitest validando determinismo e reprodutibilidade.
-- [ ] **TASK-004: Grid de navegação e algoritmo A\***
-  - Representação matricial do espaço transitável e obstáculos (`grid.ts`).
-  - Implementação pura do algoritmo de busca de caminho A* (`astar.ts`).
-  - Cobertura de testes unitários para trajetórias válidas, cantos e alvos inalcançáveis.
-- [ ] **TASK-005: Máquina de estados (FSM) e economia dos agentes**
-  - Definição dos estados comportamentais (`IDLE`, `NAVIGATING`, `WORKING`, `COLLABORATING`, `RESTING`).
-  - Lógica de variação e limites de Energia, Foco, Moral e Produtividade.
-  - Regras de ocupação exclusiva e coletiva de postos (`occupancy.ts`).
-  - Gerenciamento de tarefas e progresso de trabalho (`taskManager.ts`).
-  - Testes unitários de transições de estado e invariantes numéricos.
+- [x] **TASK-003: Fundamentos determinísticos e PRNG**
+  - Implementação do gerador determinístico pseudoaleatório baseado em seed (`prng.ts`, algoritmo Mulberry32).
+  - Suporte a timestep fixo configurável (padrão 250ms), pausa e velocidades 1x, 2x e 4x.
+  - Zero dependência de `Date.now` ou `Math.random` em qualquer camada da simulação.
+  - Testes unitários com Vitest validando determinismo, sequenciamento idêntico e clonagem de estado PRNG.
+- [x] **TASK-004: Grid de navegação e algoritmo A\***
+  - Representação matricial do espaço transitável e obstáculos (`src/game/navigation/gridUtils.ts`, `types.ts`).
+  - Implementação pura do algoritmo de busca de caminho A* em 8 direções com heurística octile (`astar.ts`).
+  - Funções puras de conversão centralizada `gridToWorld` e `worldToGrid`, `isInsideGrid`, `isWalkable`, `getNeighbors`.
+  - Extração de obstáculos estáticos a partir de `officeLayout.ts` com margem de tolerância para passagem de agentes.
+  - Prevenção rigorosa de corte de cantos diagonais (corner cutting prevention).
+  - Cobertura de testes unitários no Vitest (13 testes cobrindo os 10 critérios mandatórios).
+  - Modo visual de depuração de grid e rota desativado por padrão com overlay 3D e controles na interface.
+- [x] **TASK-004B: Conexão dos agentes à navegação, movimentação com A*, seleção e ocupação**
+  - Módulo de gerenciamento de ocupação lógica e reserva de células (`occupancy.ts`).
+  - Módulo de cinemática determinística e rotação suave (`movement.ts`) sem dependência de React ou Three.js.
+  - Orquestrador de movimento e comandos com Zustand (`agentMovementStore.ts`).
+  - Integração com `AgentAvatar.tsx` e `AgentGroup.tsx` sincronizando posições via referências diretas no `useFrame` (sem re-renders React).
+  - Transições suaves de animação: `walking` em trânsito e retorno a `idle` ao chegar ao destino.
+  - Seleção por clique no agente, desmarcação ao clicar no fundo, e envio para células navegáveis ao clicar no piso do diorama.
+  - Marcador visual de destino com anel pulsante e cone estilizado (`DestinationMarker.tsx`).
+  - Visualização dinâmica do caminho no `NavigationDebugOverlay.tsx` em modo debug.
+  - Prevenção de colisões com espera e recálculo automático de rota após tolerância a bloqueios.
+  - Testes unitários com Vitest cobrindo ocupação, cinemática e comandos de movimentação (67 testes passando 100%).
+- [x] **TASK-005: Motor lógico e determinístico da simulação (FSM, produtividade e tarefas)**
+  - Tipos e modelos estritos para agentes, tarefas, comandos e eventos (`src/game/simulation/types.ts`).
+  - Máquina de estados FSM pura para os 9 estados: `idle`, `planning`, `walking`, `working`, `thinking`, `collaborating`, `coffee`, `talking` e `error`.
+  - Fórmula matemática de produtividade (`calculateTaskProductivity`) com afinidade por skill, energia, foco, complexidade e colaboração limitada.
+  - Invariantes rigorosos: progresso monotônico [0, 1], energia e foco estritamente limitados [0, 1].
+  - 10 regras de decisão local (ida ao café por baixa energia, alocação por prioridade, bloqueio por dependências, reflexão prévia, colaboração útil e tolerância a erros).
+  - Função central `simulationStep(previousState, deltaSeconds, randomSource)` gerando `nextState`, `events` e `commands`.
+  - Documentação completa e formalizada em `SIMULATION_MODEL.md`.
+  - Cobertura de 24 novos testes unitários (91 testes no total do projeto passando 100%).
 
 ---
 

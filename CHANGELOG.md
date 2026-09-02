@@ -4,6 +4,99 @@ Todas as modificações relevantes e marcos técnicos deste projeto são documen
 
 ---
 
+## [0.7.0] - 2026-09-02
+
+### Adicionado
+- **Motor Lógico e Determinístico da Simulação (TASK-003 / TASK-005)**:
+  - **Módulo de Tipos e Contratos Estritos (`src/game/simulation/types.ts`)**:
+    - Definição formal das interfaces `AgentSimulationModel`, `TaskModel`, `SimulationConfig`, `SimulationState`, `SimulationCommand` e `SimulationEvent`.
+    - Suporte a 9 estados comportamentais: `idle`, `planning`, `walking`, `working`, `thinking`, `collaborating`, `coffee`, `talking` e `error`.
+    - Suporte a 5 tipos de habilidades com afinidades `[0, 1]`: `coding`, `research`, `analysis`, `planning` e `documentation`.
+    - Suporte a 6 status de tarefas: `backlog`, `assigned`, `in_progress`, `blocked`, `completed` e `cancelled`.
+  - **PRNG Pseudoaleatório com Seed (`src/game/simulation/prng.ts`)**:
+    - Implementação determinística baseada no algoritmo Mulberry32 com interface `RandomSource` (`next`, `nextInt`, `nextFloat`, `clone`).
+    - Nenhuma chamada a `Date.now` ou `Math.random` em todo o código da simulação.
+    - Testes unitários com Vitest em `prng.test.ts`.
+  - **Fórmulas Puras de Produtividade, Fadiga e Recuperação (`src/game/simulation/productivity.ts`)**:
+    - Função pura `calculateTaskProductivity` integrando multiplicador de afinidade por skill, fator inverso de complexidade (1 a 5), fator de energia (com decaimento quadrático abaixo de 20%), fator de foco e bônus limitado de colaboração (máximo 25%).
+    - Invariantes rigorosos: progresso monotônico crescente no intervalo `[0, 1]`, energia e foco estritamente limitados a `[0, 1]`.
+    - Funções de consumo em trabalho ativo (`applyWorkingDrain`) e recarga no café (`applyCoffeeRecovery`).
+    - Testes unitários com Vitest em `productivity.test.ts`.
+  - **Regras Locais de Decisão e Resolução de Dependências (`src/game/simulation/decision.ts`)**:
+    - Validação de integridade defensiva (`validateAgentIntegrity`) que isola dados corrompidos no estado `error` sem travar a simulação.
+    - Verificação e desbloqueio de dependências de tarefas (`updateTaskDependencies`).
+    - Seleção determinística de tarefas prioritárias por afinidade e ID (`selectBestEligibleTask`).
+    - Recrutamento dinâmico de colaborador para tarefas de alta complexidade (`findAvailableCollaborator`).
+  - **Função Central de Simulação (`src/game/simulation/simulationStep.ts`)**:
+    - Assinatura estrita: `simulationStep(previousState, deltaSeconds, randomSource) => { nextState, events, commands }`.
+    - Timestep fixo padrão de 250 ms e suporte a escalas de velocidade (1x, 2x, 4x) e pausa sem mutação de estado.
+    - Emissão de comandos desacoplados: `MOVE_TO_ZONE`, `START_WORK`, `START_COFFEE_BREAK`, `START_COLLABORATION`, `EMIT_MESSAGE`.
+    - Emissão de eventos históricos para telemetria: `AGENT_STATE_CHANGED`, `TASK_ASSIGNED`, `TASK_STARTED`, `TASK_PROGRESS`, `TASK_COMPLETED`, `TASK_BLOCKED`, `COFFEE_BREAK_STARTED`, `COFFEE_BREAK_ENDED`, `COLLABORATION_STARTED`, `COLLABORATION_ENDED`, `AGENT_ERROR`.
+    - Testes unitários cobrindo todos os 14 critérios mandatórios em `simulationStep.test.ts` (91 testes no total do projeto, 100% aprovados).
+  - **Documentação Formal do Modelo (`SIMULATION_MODEL.md`)**:
+    - Especificação de estados, diagrama de transições, formulação matemática detalhada, invariantes, eventos e comandos.
+
+---
+
+## [0.6.0] - 2026-09-02
+
+### Adicionado
+- **Conexão dos Personagens ao Sistema de Navegação, Movimentação e Ocupação (TASK-004B)**:
+  - **Gerenciador de Ocupação e Reservas (`src/game/navigation/occupancy.ts`)**:
+    - Módulo puro TypeScript (`OccupancyManager`) responsável por rastrear qual agente ocupa qual célula do grid (`Map<string, GridCoordinate>`) e quais células estão reservadas para o próximo passo (`Map<string, string>`).
+    - Garantia estrita de que dois agentes nunca ocupam a mesma célula nem reservam a mesma célula simultaneamente.
+    - Método `getDynamicObstacles` que expõe os outros agentes como obstáculos dinâmicos para desvios no A*.
+    - Cobertura com testes unitários no Vitest em `occupancy.test.ts`.
+  - **Cinemática de Movimentação e Rotação Suave (`src/game/navigation/movement.ts`)**:
+    - Função pura `stepAgentMovement` calculando avanço em unidades por segundo independente de frame rate (`delta` time).
+    - Rotação suave orientada na direção do movimento (`lerpAngle`) calculada por `Math.atan2(dx, dz)`.
+    - Lógica de reserva de célula antes de iniciar a travessia para o próximo waypoint do caminho.
+    - Se a célula seguinte estiver temporariamente bloqueada por outro agente, o agente aguarda no estado `waiting` e, caso persista bloqueada além de tolerância configurável (1.2s), recalcula dinamicamente uma nova rota pelo A*.
+    - Cobertura com testes unitários no Vitest em `movement.test.ts`.
+  - **Store de Movimentação dos Agentes (`src/game/entities/agents/agentMovementStore.ts`)**:
+    - Ponte reativa desacoplada entre a lógica pura e a renderização, contendo posições lógicas e métricas dos 4 agentes.
+    - Ações `commandAgentMove`, `stopAgent`, `tick` e `resetAllMovements`.
+    - Atualização automática da animação do agente para `walking` durante o trânsito e retorno a `idle` ao chegar ao destino ou parar.
+    - Feedback discreto com mensagens informativas sem disparar erros (ex: destino em obstáculo, fora do grid ou bloqueado).
+    - Testes unitários com Vitest em `agentMovementStore.test.ts`.
+  - **Integração Visual com Three.js e React**:
+    - `AgentAvatar.tsx`: Atualiza posição contínua e rotação Y do modelo procedural diretamente via `rootGroupRef` no `useFrame`, sem disparar `setState` ou renderizações React por frame.
+    - `AgentGroup.tsx`: Atua como orquestrador único executando o `tick` de simulação de movimento em cada frame.
+    - `DioramaBase.tsx`: Suporte a clique e toque na malha superior do piso com captura de coordenadas do ponto world (`e.point.x`, `e.point.z`), disparando o movimento do agente selecionado e invocando `e.stopPropagation()`.
+    - `GameCanvas.tsx`: Handler `onPointerMissed` no `<Canvas>` para desselecionar qualquer agente ao clicar no fundo vazio fora do diorama.
+    - `DestinationMarker.tsx`: Marcador 3D discreto no piso (anel pulsante e cone estilizado) na cor do agente selecionado durante o deslocamento.
+    - `NavigationDebugOverlay.tsx`: Renderização do trajeto ativo em tempo real do agente selecionado quando o modo debug está ligado.
+    - `UIOverlay.tsx`: Indicadores de status da movimentação, coordenadas do destino, botão "Parar" e toast de feedback discreto.
+
+---
+
+## [0.5.0] - 2026-09-02
+
+### Adicionado
+- **Sistema Matemático de Navegação e Pathfinding A\* (TASK-004)**:
+  - Implementado módulo estritamente desacoplado em `src/game/navigation/` sem dependência de React ou Three.js (TypeScript puro).
+  - Tipos explícitos: `GridCoordinate`, `WorldCoordinate2D`, `NavigationGrid`, `NavigationCell`, `PathResult`, `NavigationObstacle`, `AStarOptions` e `PathFailureReason`.
+  - Funções matemáticas puras em `gridUtils.ts`:
+    - `gridToWorld`: conversão considerando o centro do escritório como origem `worldX = (gridX - (cols - 1) / 2) * cellSize`.
+    - `worldToGrid`: conversão inversa com arredondamento e validação de limites.
+    - `isInsideGrid`: verificação estrita de limites do grid.
+    - `isWalkable`: consulta de navegabilidade considerando obstáculos estáticos e dinâmicos opcionais.
+    - `clampGridCoordinate`: contenção segura dentro dos limites.
+    - `getNeighbors`: retorno de até 8 vizinhos com custo 1 (ortogonais) e $\sqrt{2}$ (diagonais), impedindo travessia diagonal se qualquer uma das células ortogonais adjacentes estiver bloqueada (anti-corner cutting).
+    - `createNavigationGrid` e `createObstaclesFromConfig`: construção do grid a partir do `OFFICE_LAYOUT_CONFIG` oficial.
+  - Algoritmo A\* puro em `astar.ts`:
+    - Heurística octile para distância admissível e consistente em 8 direções.
+    - Reconstrução completa do caminho discreto (`path: GridCoordinate[]`) e métrico (`worldPath: WorldCoordinate2D[]`).
+    - Tratamento explícito de casos de borda: origem igual ao destino, destino fora dos limites (`OUT_OF_BOUNDS`), destino bloqueado por obstáculo (`GOAL_INVALID`), destino inalcançável murado (`UNREACHABLE`), e limite configurável de iterações (`MAX_ITERATIONS_EXCEEDED`).
+    - Opção `allowDestinationObstacle` para permitir traçar rota até a borda de interação de mesas e postos de trabalho.
+  - Suíte de 13 testes unitários com Vitest em `astar.test.ts` cobrindo rigorosamente todos os 10 critérios de teste especificados.
+  - Modo visual de depuração de navegação (desativado por padrão):
+    - Componente Three.js `NavigationDebugOverlay.tsx` em `src/game/scene/navigation/` exibindo células navegáveis (verde sutil), obstáculos (vermelho sutil), marcador de origem (coluna esmeralda), marcador de destino (coluna violeta) e caminho traçado em linha conectando waypoints.
+    - Store Zustand dedicado `navigationDebugStore.ts`.
+    - Botão "Debug Grid" e painel interativo com presets de teste adicionados no `UIOverlay.tsx`.
+
+---
+
 ## [0.4.3] - 2026-09-02
 
 ### Corrigido

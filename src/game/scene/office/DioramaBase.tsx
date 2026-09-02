@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { OFFICE_LAYOUT_CONFIG } from '../../config/officeLayout';
+import { rawAgentMovementStore } from '../../entities/agents/agentMovementStore';
+import { rawAgentStore } from '../../entities/agents/agentStore';
 
 export function DioramaBase() {
   const { totalWidth, totalDepth } = OFFICE_LAYOUT_CONFIG.grid;
@@ -61,6 +63,28 @@ export function DioramaBase() {
         position={[0, 0.005, 0]}
         receiveShadow
         material={materials.floor}
+        onClick={(e) => {
+          e.stopPropagation();
+          const selectedId = rawAgentStore.getState().selectedAgentId;
+          if (selectedId) {
+            rawAgentMovementStore.getState().commandAgentMove(selectedId, {
+              x: e.point.x,
+              z: e.point.z,
+            });
+          } else {
+            rawAgentStore.getState().selectAgent(null);
+          }
+        }}
+        onPointerOver={() => {
+          if (rawAgentStore.getState().selectedAgentId && typeof document !== 'undefined') {
+            document.body.style.cursor = 'crosshair';
+          }
+        }}
+        onPointerOut={() => {
+          if (typeof document !== 'undefined') {
+            document.body.style.cursor = 'default';
+          }
+        }}
       >
         <boxGeometry args={[totalWidth - 0.02, 0.01, totalDepth - 0.02]} />
       </mesh>
