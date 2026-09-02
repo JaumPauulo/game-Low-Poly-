@@ -1,0 +1,6 @@
+{
+  "name": "Agent Office Diorama",
+  "description": "Virtual 3D isometric low-poly office diorama with autonomous chibi agents, local deterministic simulation, and productivity dynamics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
